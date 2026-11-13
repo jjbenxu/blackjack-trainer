@@ -14,33 +14,45 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text);
     font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  header { padding: 14px 20px; border-bottom: 1px solid var(--line); display: flex;
-    align-items: baseline; gap: 14px; flex-wrap: wrap; }
-  header h1 { font-size: 19px; margin: 0; }
-  header span { color: var(--muted); font-size: 13px; }
-  main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px;
-    padding: 16px 20px; max-width: 1280px; margin: 0 auto; }
-  @media (max-width: 900px) { main { grid-template-columns: minmax(0, 1fr); padding: 12px 16px; } }
+  :root { --ch: clamp(56px, 12.5vh, 100px); }
+  header { padding: 8px 20px; border-bottom: 1px solid var(--line); display: flex;
+    align-items: center; gap: 12px; flex-wrap: wrap; }
+  header h1 { font-size: 17px; margin: 0; }
+  header span { color: var(--muted); font-size: 13px; flex: 1; min-width: 0; }
+  header button { padding: 6px 12px; font-size: 13px; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 12px;
+    padding: 12px 20px; max-width: 1280px; width: 100%; margin: 0 auto; }
+  @media (min-width: 901px) {
+    body { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+    main { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); }
+    .table, aside { min-height: 0; overflow-y: auto; }
+  }
+  @media (max-width: 900px) {
+    main { grid-template-columns: minmax(0, 1fr); padding: 12px 16px; }
+    header span { display: none; }
+    .table { min-height: 470px; }
+  }
 
   .table { background: radial-gradient(ellipse at 50% 30%, var(--felt), var(--felt-2));
-    border-radius: 18px; border: 1px solid #0a3020; padding: 18px; min-height: 520px;
-    display: flex; flex-direction: column; gap: 10px; }
-  .seat-label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    border-radius: 18px; border: 1px solid #0a3020; padding: 12px 16px;
+    display: flex; flex-direction: column; gap: 5px; }
+  .seat-label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
     color: #cfe6da; opacity: .85; }
-  .cards { display: flex; gap: 8px; flex-wrap: wrap; min-height: 104px; align-items: center; }
-  .card { width: 70px; height: 100px; border-radius: 8px; background: #fbfbf7; color: #1a1a1a;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  .cards { display: flex; gap: 8px; flex-wrap: wrap; min-height: var(--ch); align-items: center;
+    justify-content: center; }
+  .card { width: calc(var(--ch) * .7); height: var(--ch); border-radius: 8px; background: #fbfbf7;
+    color: #1a1a1a; display: flex; flex-direction: column; align-items: center; justify-content: center;
     box-shadow: 0 3px 8px rgba(0,0,0,.35); font-weight: 700; }
-  .card b { font-size: 26px; line-height: 1; }
-  .card i { font-size: 24px; font-style: normal; line-height: 1.1; }
+  .card b { font-size: calc(var(--ch) * .26); line-height: 1; }
+  .card i { font-size: calc(var(--ch) * .24); font-style: normal; line-height: 1.1; }
   .card.red { color: #c62828; }
   .card.back { background: repeating-linear-gradient(45deg, #8a2a2a, #8a2a2a 6px, #a53a3a 6px, #a53a3a 12px);
     border: 4px solid #fbfbf7; }
-  .dealer, .player { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .dealer, .player { display: flex; flex-direction: column; gap: 4px; align-items: center; }
   .total { font-size: 14px; color: #e6f3ec; min-height: 21px; }
   .hands { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
-  .hand { padding: 10px 12px; border-radius: 12px; border: 2px solid transparent;
-    display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .hand { padding: 6px 12px; border-radius: 12px; border: 2px solid transparent;
+    display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: calc(var(--ch) + 64px); }
   .hand.active { border-color: var(--gold); background: rgba(0,0,0,.14); }
   .badge { font-size: 13px; font-weight: 700; padding: 2px 10px; border-radius: 99px;
     background: rgba(0,0,0,.35); }
@@ -48,7 +60,7 @@
   .message { text-align: center; min-height: 24px; font-weight: 600; margin: auto 0 0; }
   .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
   button { font: inherit; color: var(--text); background: var(--panel-2); border: 1px solid var(--line);
-    border-radius: 9px; padding: 10px 14px; cursor: pointer; }
+    border-radius: 9px; padding: 8px 14px; cursor: pointer; }
   button:hover:not(:disabled) { border-color: var(--gold); }
   button:disabled { opacity: .35; cursor: default; }
   button.primary { background: var(--gold); color: #1d1602; border-color: var(--gold); font-weight: 700; }
@@ -61,42 +73,48 @@
   .chip { border-radius: 99px; padding: 7px 12px; font-size: 13px; }
   .shoe { text-align: center; font-size: 12px; color: #cfe6da; opacity: .8; }
 
-  aside { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
-  .panel h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
-    margin: 0 0 10px; }
+  aside { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 11px 13px;
+    flex: none; }
+  .panel.grow { flex: 1 1 70px; min-height: 70px; display: flex; flex-direction: column; }
+  .panel h2 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+    margin: 0 0 7px; display: flex; justify-content: space-between; align-items: baseline; }
   .verdict { font-weight: 700; margin-bottom: 4px; }
   .verdict.ok { color: var(--good); } .verdict.no { color: var(--bad); }
   .sub { color: var(--muted); font-size: 13px; }
-  table.ev { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-  table.ev td { padding: 5px 4px; border-top: 1px solid var(--line); }
+  table.ev { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 14px; }
+  table.ev td { padding: 3px 4px; border-top: 1px solid var(--line); }
+  table.ev th { font-size: 12px; font-weight: 400; color: var(--muted); text-align: left; padding: 0 4px 3px; }
   table.ev td:nth-child(2) { text-align: right; font-variant-numeric: tabular-nums; }
   table.ev td:nth-child(3) { text-align: right; font-size: 12px; color: var(--muted); }
   table.ev tr.best td:first-child { color: var(--good); font-weight: 700; }
-  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .stat { background: var(--panel-2); border-radius: 10px; padding: 9px 10px; }
-  .stat small { display: block; color: var(--muted); font-size: 12px; }
-  .stat strong { font-size: 18px; font-variant-numeric: tabular-nums; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .stat { background: var(--panel-2); border-radius: 9px; padding: 5px 8px; }
+  .stat small { display: block; color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .stat strong { font-size: 16px; font-variant-numeric: tabular-nums; }
   .rules label { display: flex; justify-content: space-between; align-items: center; gap: 10px;
     padding: 5px 0; font-size: 14px; }
   .rules select { font: inherit; background: var(--panel-2); color: var(--text);
     border: 1px solid var(--line); border-radius: 7px; padding: 4px 6px; }
-  .log { margin: 0; padding: 0; list-style: none; font-size: 13px; max-height: 170px; overflow: auto; }
+  .log { margin: 0; padding: 0; list-style: none; font-size: 13px; flex: 1; min-height: 0; overflow: auto; }
   .log li { padding: 5px 0; border-top: 1px solid var(--line); }
   .log li:first-child { border-top: 0; }
   .linkbtn { background: none; border: 0; color: var(--muted); padding: 0; text-decoration: underline;
     font-size: 13px; }
 
-  .chartwrap { max-width: 1280px; margin: 0 auto; padding: 0 20px 30px; }
-  @media (max-width: 900px) { .chartwrap { padding: 0 16px 24px; } }
-  details { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
-  summary { cursor: pointer; font-weight: 600; }
-  .scroll { overflow-x: auto; }
-  table.chart { border-collapse: collapse; margin-top: 12px; font-size: 13px; }
-  table.chart th, table.chart td { width: 34px; height: 26px; text-align: center; border: 1px solid var(--bg); }
+  dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px 18px; max-width: min(92vw, 560px); max-height: 92vh; overflow: auto; }
+  dialog::backdrop { background: rgba(0, 0, 0, .6); }
+  dialog h2 { font-size: 16px; margin: 0 0 8px; display: flex; justify-content: space-between;
+    align-items: center; gap: 20px; }
+  dialog h2 button { padding: 4px 10px; font-size: 13px; }
+  #chartDlg { max-width: min(96vw, 1120px); }
+  .charts { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+  table.chart { border-collapse: collapse; margin-top: 4px; font-size: 12px; }
+  table.chart th, table.chart td { width: 28px; height: 21px; text-align: center; border: 1px solid var(--panel); }
   table.chart th { color: var(--muted); font-weight: 600; }
-  table.chart th.row { width: 78px; text-align: left; padding-left: 4px; }
-  table.chart th.sec { text-align: left; padding: 10px 4px 4px; color: var(--text); border: 0; }
+  table.chart th.row { width: 66px; text-align: left; padding-left: 4px; white-space: nowrap; }
+  table.chart th.sec { text-align: left; padding: 6px 4px 2px; color: var(--text); border: 0; }
   td.aH { background: var(--H); } td.aS { background: var(--S); } td.aD { background: var(--D); }
   td.aP { background: var(--P); } td.aR { background: var(--R); }
   .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; margin-top: 10px; }
@@ -108,6 +126,8 @@
 <header>
   <h1>Blackjack Trainer</h1>
   <span>You against the dealer. Every decision is graded against the mathematically best move.</span>
+  <button id="openRules">Table rules</button>
+  <button id="openChart">Strategy chart</button>
 </header>
 
 <main>
@@ -145,43 +165,41 @@
     <div class="panel">
       <h2>Coach</h2>
       <div id="coach"><div class="sub">Play a hand. After each decision you'll see whether it was the best move and what each option was worth.</div></div>
-      <label class="sub" style="display:flex;gap:8px;align-items:center;margin-top:12px">
-        <input type="checkbox" id="hint"> Show the best move before I act (those decisions aren't scored)
+      <label class="sub" style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <input type="checkbox" id="hint"> Show the best move first (not scored)
       </label>
     </div>
     <div class="panel">
-      <h2>Session</h2>
+      <h2>Session <button class="linkbtn" id="reset">Reset</button></h2>
       <div class="stats" id="stats"></div>
-      <div style="margin-top:10px"><button class="linkbtn" id="reset">Reset session</button></div>
     </div>
-    <div class="panel">
+    <div class="panel grow">
       <h2>Recent mistakes</h2>
       <ul class="log" id="log"></ul>
     </div>
-    <div class="panel rules">
-      <h2>Table rules</h2>
+  </aside>
+</main>
+
+<dialog id="rulesDlg" class="rules">
+      <h2>Table rules <button data-close>Close</button></h2>
       <label>Decks <select id="rDecks"><option>1</option><option>2</option><option>4</option><option>6</option><option>8</option></select></label>
       <label>Dealer on soft 17 <select id="rH17"><option value="1">Hits</option><option value="0">Stands</option></select></label>
       <label>Double after split <select id="rDas"><option value="1">Allowed</option><option value="0">Not allowed</option></select></label>
       <label>Surrender <select id="rSur"><option value="1">Allowed</option><option value="0">Not allowed</option></select></label>
       <label>Blackjack pays <select id="rBj"><option value="1.5">3 to 2</option><option value="1.2">6 to 5</option></select></label>
       <div class="sub" style="margin-top:6px">One split per round; split aces get one card each. Dealer checks for blackjack. No insurance (it is a losing bet). Rules can be changed between rounds.</div>
-    </div>
-  </aside>
-</main>
+</dialog>
 
-<div class="chartwrap">
-  <details id="chartBox">
-    <summary>Strategy chart for these rules</summary>
+<dialog id="chartDlg">
+    <h2>Strategy chart for these rules <button data-close>Close</button></h2>
     <div class="legend">
       <span style="--c:var(--H)">H = Hit</span><span style="--c:var(--S)">S = Stand</span>
       <span style="--c:var(--D)">D = Double</span><span style="--c:var(--P)">P = Split</span>
       <span style="--c:var(--R)">R = Surrender</span>
     </div>
-    <div class="scroll"><table class="chart" id="chart"></table></div>
+    <div class="charts" id="chart"></div>
     <div class="sub" style="margin-top:8px">Best move on your first two cards, by dealer's face-up card. The live coach can differ on a few borderline hands because it accounts for your exact cards.</div>
-  </details>
-</div>
+</dialog>
 
 <script>
 /* ================= ENGINE (no page dependencies) =================
@@ -473,7 +491,7 @@ function render() {
   $('stats').innerHTML = [
     ['Bankroll', money(S.bankroll)], ['Net result', signed(st.net)],
     ['Rounds played', st.rounds], ['Decisions scored', st.decisions],
-    ['Accuracy', acc], ['Cost of mistakes', money(st.chipsLost) + ' chips'],
+    ['Accuracy', acc], ['Mistake cost', money(st.chipsLost)],
   ].map(([k, v]) => `<div class="stat"><small>${k}</small><strong>${v}</strong></div>`).join('');
   $('log').innerHTML = S.log.length ? S.log.map(l => `<li>${l}</li>`).join('')
     : '<li class="sub">None yet.</li>';
@@ -487,8 +505,7 @@ function render() {
       <div class="verdict ${f.ok ? 'ok' : 'no'}">${f.ok ? '✓ ' + LABEL[f.chosen] + ' was the best move.'
         : '✗ ' + LABEL[f.best] + ' was better than ' + LABEL[f.chosen] + '.'}</div>
       ${f.ok ? '' : `<div class="sub">That choice gives up ${f.loss.toFixed(3)} bets on average (${money(f.chips)} chips at this bet).</div>`}
-      <table class="ev">${rows}</table>
-      <div class="sub" style="margin-top:8px">Numbers are the average win or loss per chip of your original bet over the long run.${f.scored ? '' : ' Not scored: hints were on.'}</div>`;
+      <table class="ev"><tr><th colspan="3">Average win or loss per chip bet${f.scored ? '' : ' · not scored (hints on)'}</th></tr>${rows}</table>`;
   }
 }
 
@@ -500,16 +517,16 @@ function buildChart() {
     const L = { hit: 'H', stand: 'S', double: 'D', split: 'P', surrender: 'R' }[a];
     return `<td class="a${L}">${L}</td>`;
   }).join('') + '</tr>';
-  const head = t => `<tr><th class="sec" colspan="11">${t}</th></tr><tr><th class="row">You / Dealer</th>` +
+  const head = t => `<table class="chart"><tr><th class="sec" colspan="11">${t}</th></tr><tr><th class="row">vs dealer</th>` +
     ups.map(u => `<th>${u === 0 ? 'A' : u + 1}</th>`).join('') + '</tr>';
   let html = head('Hard totals');
   for (let t = 17; t >= 8; t--) html += row('Hard ' + t, t >= 12 ? [9, t - 11] : [1, t - 3]);
-  html += head('Soft totals');
+  html += '</table>' + head('Soft totals');
   for (let k = 9; k >= 2; k--) html += row('A + ' + k, [0, k - 1]);
-  html += head('Pairs');
+  html += '</table>' + head('Pairs');
   html += row('A, A', [0, 0]);
   for (let k = 10; k >= 2; k--) html += row(`${k}, ${k}`, [k - 1, k - 1]);
-  $('chart').innerHTML = html;
+  $('chart').innerHTML = html + '</table>';
 }
 
 /* ---------------- wiring ---------------- */
@@ -535,8 +552,11 @@ $('reset').addEventListener('click', () => {
   $('coach').innerHTML = '<div class="sub">Session reset. Play a hand to get feedback.</div>';
   save(); render();
 });
+$('openRules').addEventListener('click', () => $('rulesDlg').showModal());
+$('openChart').addEventListener('click', () => $('chartDlg').showModal());
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
 document.addEventListener('keydown', e => {
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.metaKey || e.ctrlKey || e.altKey || document.querySelector('dialog[open]')) return;
   const typing = e.target.tagName === 'INPUT' && e.target.type === 'number';
   if (e.key === 'Enter') { e.preventDefault(); deal(); return; }
   if (typing) return;
