@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blackjack Trainer</title>
+<style>
+  :root {
+    --bg: #0e1512; --panel: #17211c; --panel-2: #1f2c26; --line: #2c3d35;
+    --felt: #14603f; --felt-2: #0f4a31; --text: #e9f0ec; --muted: #9db0a6;
+    --gold: #e5b94a; --good: #4cc38a; --bad: #ef6b6b;
+    --H: #c8503f; --S: #c99a1e; --D: #2f7fd0; --P: #2f9e63; --R: #8160b0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 14px 20px; border-bottom: 1px solid var(--line); display: flex;
+    align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  header h1 { font-size: 19px; margin: 0; }
+  header span { color: var(--muted); font-size: 13px; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px;
+    padding: 16px 20px; max-width: 1280px; margin: 0 auto; }
+  @media (max-width: 900px) { main { grid-template-columns: minmax(0, 1fr); padding: 12px 16px; } }
+
+  .table { background: radial-gradient(ellipse at 50% 30%, var(--felt), var(--felt-2));
+    border-radius: 18px; border: 1px solid #0a3020; padding: 18px; min-height: 520px;
+    display: flex; flex-direction: column; gap: 10px; }
+  .seat-label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: #cfe6da; opacity: .85; }
+  .cards { display: flex; gap: 8px; flex-wrap: wrap; min-height: 104px; align-items: center; }
+  .card { width: 70px; height: 100px; border-radius: 8px; background: #fbfbf7; color: #1a1a1a;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 0 3px 8px rgba(0,0,0,.35); font-weight: 700; }
+  .card b { font-size: 26px; line-height: 1; }
+  .card i { font-size: 24px; font-style: normal; line-height: 1.1; }
+  .card.red { color: #c62828; }
+  .card.back { background: repeating-linear-gradient(45deg, #8a2a2a, #8a2a2a 6px, #a53a3a 6px, #a53a3a 12px);
+    border: 4px solid #fbfbf7; }
+  .dealer, .player { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .total { font-size: 14px; color: #e6f3ec; min-height: 21px; }
+  .hands { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .hand { padding: 10px 12px; border-radius: 12px; border: 2px solid transparent;
+    display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .hand.active { border-color: var(--gold); background: rgba(0,0,0,.14); }
+  .badge { font-size: 13px; font-weight: 700; padding: 2px 10px; border-radius: 99px;
+    background: rgba(0,0,0,.35); }
+  .badge.win { color: var(--good); } .badge.lose { color: var(--bad); } .badge.push { color: var(--gold); }
+  .message { text-align: center; min-height: 24px; font-weight: 600; margin: auto 0 0; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  button { font: inherit; color: var(--text); background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 9px; padding: 10px 14px; cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--gold); }
+  button:disabled { opacity: .35; cursor: default; }
+  button.primary { background: var(--gold); color: #1d1602; border-color: var(--gold); font-weight: 700; }
+  button.hint { outline: 3px solid var(--gold); outline-offset: 2px; }
+  button kbd { font: 11px ui-monospace, monospace; opacity: .6; margin-left: 5px; }
+  .betrow { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap;
+    font-size: 14px; }
+  .betrow input { width: 84px; font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--text); }
+  .chip { border-radius: 99px; padding: 7px 12px; font-size: 13px; }
+  .shoe { text-align: center; font-size: 12px; color: #cfe6da; opacity: .8; }
+
+  aside { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .panel h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+    margin: 0 0 10px; }
+  .verdict { font-weight: 700; margin-bottom: 4px; }
+  .verdict.ok { color: var(--good); } .verdict.no { color: var(--bad); }
+  .sub { color: var(--muted); font-size: 13px; }
+  table.ev { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+  table.ev td { padding: 5px 4px; border-top: 1px solid var(--line); }
+  table.ev td:nth-child(2) { text-align: right; font-variant-numeric: tabular-nums; }
+  table.ev td:nth-child(3) { text-align: right; font-size: 12px; color: var(--muted); }
+  table.ev tr.best td:first-child { color: var(--good); font-weight: 700; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat { background: var(--panel-2); border-radius: 10px; padding: 9px 10px; }
+  .stat small { display: block; color: var(--muted); font-size: 12px; }
+  .stat strong { font-size: 18px; font-variant-numeric: tabular-nums; }
+  .rules label { display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    padding: 5px 0; font-size: 14px; }
+  .rules select { font: inherit; background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--line); border-radius: 7px; padding: 4px 6px; }
+  .log { margin: 0; padding: 0; list-style: none; font-size: 13px; max-height: 170px; overflow: auto; }
+  .log li { padding: 5px 0; border-top: 1px solid var(--line); }
+  .log li:first-child { border-top: 0; }
+  .linkbtn { background: none; border: 0; color: var(--muted); padding: 0; text-decoration: underline;
+    font-size: 13px; }
+
+  .chartwrap { max-width: 1280px; margin: 0 auto; padding: 0 20px 30px; }
+  @media (max-width: 900px) { .chartwrap { padding: 0 16px 24px; } }
+  details { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+  summary { cursor: pointer; font-weight: 600; }
+  .scroll { overflow-x: auto; }
+  table.chart { border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+  table.chart th, table.chart td { width: 34px; height: 26px; text-align: center; border: 1px solid var(--bg); }
+  table.chart th { color: var(--muted); font-weight: 600; }
+  table.chart th.row { width: 78px; text-align: left; padding-left: 4px; }
+  table.chart th.sec { text-align: left; padding: 10px 4px 4px; color: var(--text); border: 0; }
+  td.aH { background: var(--H); } td.aS { background: var(--S); } td.aD { background: var(--D); }
+  td.aP { background: var(--P); } td.aR { background: var(--R); }
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; margin-top: 10px; }
+  .legend span::before { content: ""; display: inline-block; width: 11px; height: 11px; border-radius: 3px;
+    margin-right: 5px; background: var(--c); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Blackjack Trainer</h1>
+  <span>You against the dealer. Every decision is graded against the mathematically best move.</span>
+</header>
+
+<main>
+  <section class="table">
+    <div class="dealer">
+      <div class="seat-label">Dealer</div>
+      <div class="cards" id="dealerCards"></div>
+      <div class="total" id="dealerTotal"></div>
+    </div>
+    <div class="player">
+      <div class="hands" id="hands"></div>
+      <div class="seat-label">You</div>
+    </div>
+    <div class="message" id="message"></div>
+    <div class="controls" id="actions">
+      <button data-a="hit">Hit<kbd>H</kbd></button>
+      <button data-a="stand">Stand<kbd>S</kbd></button>
+      <button data-a="double">Double<kbd>D</kbd></button>
+      <button data-a="split">Split<kbd>P</kbd></button>
+      <button data-a="surrender">Surrender<kbd>R</kbd></button>
+    </div>
+    <div class="betrow">
+      <span>Bet</span>
+      <input id="bet" type="number" min="1" step="1">
+      <button class="chip" data-chip="5">5</button>
+      <button class="chip" data-chip="25">25</button>
+      <button class="chip" data-chip="100">100</button>
+      <button class="chip" data-chip="500">500</button>
+      <button class="primary" id="deal">Deal<kbd>Enter</kbd></button>
+    </div>
+    <div class="shoe" id="shoe"></div>
+  </section>
+
+  <aside>
+    <div class="panel">
+      <h2>Coach</h2>
+      <div id="coach"><div class="sub">Play a hand. After each decision you'll see whether it was the best move and what each option was worth.</div></div>
+      <label class="sub" style="display:flex;gap:8px;align-items:center;margin-top:12px">
+        <input type="checkbox" id="hint"> Show the best move before I act (those decisions aren't scored)
+      </label>
+    </div>
+    <div class="panel">
+      <h2>Session</h2>
+      <div class="stats" id="stats"></div>
+      <div style="margin-top:10px"><button class="linkbtn" id="reset">Reset session</button></div>
+    </div>
+    <div class="panel">
+      <h2>Recent mistakes</h2>
+      <ul class="log" id="log"></ul>
+    </div>
+    <div class="panel rules">
+      <h2>Table rules</h2>
+      <label>Decks <select id="rDecks"><option>1</option><option>2</option><option>4</option><option>6</option><option>8</option></select></label>
+      <label>Dealer on soft 17 <select id="rH17"><option value="1">Hits</option><option value="0">Stands</option></select></label>
+      <label>Double after split <select id="rDas"><option value="1">Allowed</option><option value="0">Not allowed</option></select></label>
+      <label>Surrender <select id="rSur"><option value="1">Allowed</option><option value="0">Not allowed</option></select></label>
+      <label>Blackjack pays <select id="rBj"><option value="1.5">3 to 2</option><option value="1.2">6 to 5</option></select></label>
+      <div class="sub" style="margin-top:6px">One split per round; split aces get one card each. Dealer checks for blackjack. No insurance (it is a losing bet). Rules can be changed between rounds.</div>
+    </div>
+  </aside>
+</main>
+
+<div class="chartwrap">
+  <details id="chartBox">
+    <summary>Strategy chart for these rules</summary>
+    <div class="legend">
+      <span style="--c:var(--H)">H = Hit</span><span style="--c:var(--S)">S = Stand</span>
+      <span style="--c:var(--D)">D = Double</span><span style="--c:var(--P)">P = Split</span>
+      <span style="--c:var(--R)">R = Surrender</span>
+    </div>
+    <div class="scroll"><table class="chart" id="chart"></table></div>
+    <div class="sub" style="margin-top:8px">Best move on your first two cards, by dealer's face-up card. The live coach can differ on a few borderline hands because it accounts for your exact cards.</div>
+  </details>
+</div>
+
+<script>
+/* ================= ENGINE (no page dependencies) =================
+   Card values are indexes: 0 = Ace, 1..8 = 2..9, 9 = any ten-value card. */
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const SUITS = ['♠','♥','♦','♣'];
+const val = c => Math.min(c.r, 9);
+
+function addCard(total, soft, v) {
+  let t = total + (v === 0 ? 1 : v + 1);
+  if (v === 0 && !soft && t + 10 <= 21) { t += 10; soft = true; }
+  if (t > 21 && soft) { t -= 10; soft = false; }
+  return [t, soft];
+}
+function info(vals) {
+  let t = 0, s = false;
+  for (const v of vals) [t, s] = addCard(t, s, v);
+  return { total: t, soft: s };
+}
+// Chance of each card value from a fresh shoe once the visible cards are removed.
+function probsFor(decks, seen) {
+  const c = Array(10).fill(4 * decks); c[9] = 16 * decks;
+  for (const v of seen) c[v]--;
+  const n = c.reduce((a, b) => a + Math.max(b, 0), 0);
+  return c.map(x => Math.max(x, 0) / n);
+}
+// Chances of the dealer finishing on 17,18,19,20,21 or bust, given no dealer blackjack.
+function dealerDist(p, up, h17) {
+  const memo = new Map();
+  const rec = (t, s) => {
+    if (t > 21) return [0, 0, 0, 0, 0, 1];
+    if (t >= 17 && !(h17 && t === 17 && s)) { const d = [0, 0, 0, 0, 0, 0]; d[t - 17] = 1; return d; }
+    const k = t * 2 + (s ? 1 : 0);
+    if (memo.has(k)) return memo.get(k);
+    const d = [0, 0, 0, 0, 0, 0];
+    for (let v = 0; v < 10; v++) {
+      if (!p[v]) continue;
+      const [nt, ns] = addCard(t, s, v), r = rec(nt, ns);
+      for (let i = 0; i < 6; i++) d[i] += p[v] * r[i];
+    }
+    memo.set(k, d); return d;
+  };
+  const [t0, s0] = addCard(0, false, up);
+  const excl = up === 0 ? 9 : up === 9 ? 0 : -1;       // hole card that would make blackjack
+  const norm = excl >= 0 ? 1 - p[excl] : 1;
+  const d = [0, 0, 0, 0, 0, 0];
+  for (let v = 0; v < 10; v++) {
+    if (v === excl || !p[v]) continue;
+    const [nt, ns] = addCard(t0, s0, v), r = rec(nt, ns);
+    for (let i = 0; i < 6; i++) d[i] += p[v] / norm * r[i];
+  }
+  return d;
+}
+/* Average result (in bets) of every legal action.
+   o: { vals, up, decks, h17, das, surrender, afterSplit, seen } */
+function solve(o) {
+  const p = probsFor(o.decks, o.seen || [...o.vals, o.up]);
+  const dd = dealerDist(p, o.up, o.h17);
+  const stand = t => {
+    if (t > 21) return -1;
+    let e = dd[5];
+    for (let i = 0; i < 5; i++) { const d = 17 + i; e += d < t ? dd[i] : d > t ? -dd[i] : 0; }
+    return e;
+  };
+  const hm = new Map();
+  const hit = (t, s) => {
+    const k = t * 2 + (s ? 1 : 0);
+    if (hm.has(k)) return hm.get(k);
+    let e = 0;
+    for (let v = 0; v < 10; v++) {
+      if (!p[v]) continue;
+      const [nt, ns] = addCard(t, s, v);
+      e += p[v] * (nt > 21 ? -1 : Math.max(stand(nt), hit(nt, ns)));
+    }
+    hm.set(k, e); return e;
+  };
+  const dbl = (t, s) => {
+    let e = 0;
+    for (let v = 0; v < 10; v++) {
+      if (!p[v]) continue;
+      const [nt] = addCard(t, s, v);
+      e += p[v] * 2 * (nt > 21 ? -1 : stand(nt));
+    }
+    return e;
+  };
+  const { total, soft } = info(o.vals);
+  const two = o.vals.length === 2;
+  const ev = { stand: stand(total), hit: hit(total, soft) };
+  if (two && (!o.afterSplit || o.das)) ev.double = dbl(total, soft);
+  if (two && !o.afterSplit && o.surrender) ev.surrender = -0.5;
+  if (two && !o.afterSplit && o.vals[0] === o.vals[1]) {
+    const r = o.vals[0], [t0, s0] = addCard(0, false, r);
+    let e = 0;
+    for (let v = 0; v < 10; v++) {
+      if (!p[v]) continue;
+      const [nt, ns] = addCard(t0, s0, v);
+      e += p[v] * (r === 0 ? stand(nt)
+        : Math.max(stand(nt), hit(nt, ns), o.das ? dbl(nt, ns) : -Infinity));
+    }
+    ev.split = 2 * e;
+  }
+  let best = 'stand';
+  for (const a in ev) if (ev[a] > ev[best] + 1e-12) best = a;
+  return { ev, best, total, soft };
+}
+/* ================= END ENGINE ================= */
+
+const LABEL = { hit: 'Hit', stand: 'Stand', double: 'Double', split: 'Split', surrender: 'Surrender' };
+const $ = id => document.getElementById(id);
+const fresh = () => ({ rounds: 0, decisions: 0, correct: 0, evLost: 0, chipsLost: 0, net: 0 });
+const S = {
+  bankroll: 1000, bet: 25, shoe: [], shoeSize: 0, phase: 'bet', dealer: [], hands: [], active: 0,
+  hole: true, msg: '', fb: null, hint: false, stats: fresh(), log: [],
+  rules: { decks: 8, h17: true, das: true, surrender: true, bj: 1.5 },
+};
+
+function save() {
+  try {
+    localStorage.setItem('bjTrainer', JSON.stringify({
+      bankroll: S.bankroll, bet: S.bet, stats: S.stats, log: S.log, rules: S.rules, hint: S.hint }));
+  } catch (e) {}
+}
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem('bjTrainer') || 'null');
+    if (!d) return;
+    for (const k of ['bankroll', 'bet', 'log', 'hint']) if (d[k] !== undefined) S[k] = d[k];
+    Object.assign(S.stats, d.stats || {}); Object.assign(S.rules, d.rules || {});
+  } catch (e) {}
+}
+
+function newShoe() {
+  const s = [];
+  for (let d = 0; d < S.rules.decks; d++)
+    for (let su = 0; su < 4; su++) for (let r = 0; r < 13; r++) s.push({ r, s: su });
+  for (let i = s.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1)); [s[i], s[j]] = [s[j], s[i]];
+  }
+  S.shoe = s; S.shoeSize = s.length;
+}
+const draw = () => S.shoe.pop();
+const vals = cards => cards.map(val);
+const isBJ = cards => cards.length === 2 && info(vals(cards)).total === 21;
+const money = n => (n < 0 ? '−' : '') + Math.abs(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+const signed = n => (n > 0 ? '+' : '') + money(n);
+const evFmt = x => (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(3);
+
+function deal() {
+  if (S.phase !== 'bet') return;
+  S.bet = Math.max(1, Math.floor(+$('bet').value || 1));
+  let shuffled = false;
+  if (S.shoe.length < S.shoeSize * 0.25) { newShoe(); shuffled = true; }
+  S.dealer = [draw(), draw()];
+  const h = { cards: [draw(), draw()], bet: S.bet };
+  S.hands = [h]; S.active = 0; S.hole = true; S.fb = null;
+  S.msg = shuffled ? 'Shoe reshuffled.' : '';
+  const up = val(S.dealer[0]), dBJ = isBJ(S.dealer), pBJ = isBJ(h.cards);
+  if ((up === 0 || up === 9) && dBJ) {
+    S.hole = false; h.result = pBJ ? 'push' : 'lose'; S.msg = 'Dealer has blackjack.'; return finish();
+  }
+  if (pBJ) { S.hole = false; h.result = 'bj'; S.msg = 'Blackjack!'; return finish(); }
+  S.phase = 'play'; render();
+}
+
+function legal(h) {
+  const a = ['hit', 'stand'];
+  if (h.cards.length === 2) {
+    if (!h.fromSplit || S.rules.das) a.push('double');
+    if (!h.fromSplit && val(h.cards[0]) === val(h.cards[1])) a.push('split');
+    if (!h.fromSplit && S.rules.surrender) a.push('surrender');
+  }
+  return a;
+}
+function advise(h) {
+  const seen = [val(S.dealer[0])];
+  for (const x of S.hands) seen.push(...vals(x.cards));
+  return solve({ vals: vals(h.cards), up: val(S.dealer[0]), decks: S.rules.decks, h17: S.rules.h17,
+    das: S.rules.das, surrender: S.rules.surrender, afterSplit: !!h.fromSplit, seen });
+}
+function describe(h) {
+  const v = vals(h.cards), i = info(v);
+  if (v.length === 2 && v[0] === v[1] && !h.fromSplit)
+    return 'Pair of ' + (v[0] === 0 ? 'aces' : v[0] === 9 ? 'tens' : (v[0] + 1) + 's');
+  return (i.soft ? 'Soft ' : 'Hard ') + i.total;
+}
+function grade(h, a) {
+  const r = advise(h), loss = r.ev[r.best] - r.ev[a], ok = loss < 1e-6;
+  const up = S.dealer[0], upName = val(up) === 0 ? 'ace' : val(up) === 9 ? '10' : RANKS[up.r];
+  const spot = describe(h) + ' against dealer ' + upName;
+  S.fb = { spot, ok, chosen: a, best: r.best, ev: r.ev, loss, chips: loss * h.bet, scored: !S.hint };
+  if (S.hint) return;
+  S.stats.decisions++;
+  if (ok) S.stats.correct++;
+  else {
+    S.stats.evLost += loss; S.stats.chipsLost += loss * h.bet;
+    S.log.unshift(`${spot}: you chose ${LABEL[a]}, best was ${LABEL[r.best]} (cost ${loss.toFixed(3)} bets)`);
+    S.log.length = Math.min(S.log.length, 12);
+  }
+}
+
+function act(a) {
+  if (S.phase !== 'play') return;
+  const h = S.hands[S.active];
+  if (!legal(h).includes(a)) return;
+  grade(h, a);
+  const bustCheck = () => { if (info(vals(h.cards)).total > 21) { h.result = 'bust'; h.done = true; } };
+  if (a === 'hit') { h.cards.push(draw()); bustCheck(); if (info(vals(h.cards)).total === 21) h.done = true; }
+  if (a === 'stand') h.done = true;
+  if (a === 'double') { h.bet *= 2; h.cards.push(draw()); bustCheck(); h.done = true; }
+  if (a === 'surrender') { h.result = 'surrender'; h.done = true; }
+  if (a === 'split') {
+    const aces = val(h.cards[0]) === 0;
+    S.hands = h.cards.map(c => {
+      const n = { cards: [c, draw()], bet: h.bet, fromSplit: true };
+      n.done = aces || info(vals(n.cards)).total === 21;
+      return n;
+    });
+    S.active = 0;
+  }
+  while (S.active < S.hands.length && S.hands[S.active].done) S.active++;
+  if (S.active >= S.hands.length) dealerTurn(); else render();
+}
+
+function dealerTurn() {
+  S.phase = 'dealer'; S.hole = false; render();
+  const live = S.hands.some(h => !h.result);
+  const step = () => {
+    const { total, soft } = info(vals(S.dealer));
+    if (live && (total < 17 || (total === 17 && soft && S.rules.h17))) {
+      S.dealer.push(draw()); render(); setTimeout(step, 450);
+    } else finish();
+  };
+  setTimeout(step, 450);
+}
+
+function finish() {
+  const d = info(vals(S.dealer)).total;
+  let net = 0;
+  for (const h of S.hands) {
+    if (!h.result) {
+      const t = info(vals(h.cards)).total;
+      h.result = d > 21 || t > d ? 'win' : t < d ? 'lose' : 'push';
+    }
+    h.net = { win: h.bet, lose: -h.bet, bust: -h.bet, push: 0, surrender: -h.bet / 2,
+      bj: h.bet * S.rules.bj }[h.result];
+    net += h.net;
+  }
+  S.bankroll += net; S.stats.rounds++; S.stats.net += net;
+  S.msg = (S.msg ? S.msg + ' ' : '') + (net > 0 ? `You win ${money(net)}.` : net < 0 ? `You lose ${money(-net)}.` : 'Push: bet returned.');
+  S.phase = 'bet'; save(); render();
+}
+
+/* ---------------- display ---------------- */
+function cardHTML(c, hidden) {
+  if (hidden) return '<div class="card back"></div>';
+  return `<div class="card${c.s === 1 || c.s === 2 ? ' red' : ''}"><b>${RANKS[c.r]}</b><i>${SUITS[c.s]}</i></div>`;
+}
+const RESULT = { win: ['Win', 'win'], lose: ['Lose', 'lose'], bust: ['Bust', 'lose'], push: ['Push', 'push'],
+  surrender: ['Surrendered', 'lose'], bj: ['Blackjack', 'win'] };
+
+function render() {
+  $('dealerCards').innerHTML = S.dealer.map((c, i) => cardHTML(c, i === 1 && S.hole)).join('');
+  $('dealerTotal').textContent = !S.dealer.length ? '' :
+    S.hole ? 'Showing ' + info([val(S.dealer[0])]).total : 'Dealer has ' + info(vals(S.dealer)).total;
+  $('hands').innerHTML = S.hands.map((h, i) => {
+    const t = info(vals(h.cards));
+    const badge = h.result && h.net !== undefined
+      ? `<span class="badge ${RESULT[h.result][1]}">${RESULT[h.result][0]} ${h.net ? signed(h.net) : ''}</span>`
+      : h.result ? `<span class="badge lose">${RESULT[h.result][0]}</span>` : '';
+    return `<div class="hand${S.phase === 'play' && i === S.active ? ' active' : ''}">
+      <div class="cards">${h.cards.map(c => cardHTML(c)).join('')}</div>
+      <div class="total">${t.soft ? 'Soft ' : ''}${t.total} · bet ${money(h.bet)}</div>${badge}</div>`;
+  }).join('') || '<div class="cards"></div>';
+  $('message').textContent = S.msg || (S.phase === 'bet' && !S.hands.length ? 'Set your bet and press Deal.' : '');
+
+  const playing = S.phase === 'play', h = playing ? S.hands[S.active] : null;
+  const ok = h ? legal(h) : [], tip = h && S.hint ? advise(h).best : null;
+  document.querySelectorAll('#actions button').forEach(b => {
+    b.disabled = !ok.includes(b.dataset.a);
+    b.classList.toggle('hint', b.dataset.a === tip);
+  });
+  const betting = S.phase === 'bet';
+  $('deal').disabled = !betting; $('bet').disabled = !betting;
+  document.querySelectorAll('.chip, .rules select').forEach(e => e.disabled = !betting);
+  if (document.activeElement !== $('bet')) $('bet').value = S.bet;
+  $('shoe').textContent = `${S.shoe.length} of ${S.shoeSize} cards left in the shoe · reshuffles at 25%`;
+
+  const st = S.stats, acc = st.decisions ? (100 * st.correct / st.decisions).toFixed(1) + '%' : '–';
+  $('stats').innerHTML = [
+    ['Bankroll', money(S.bankroll)], ['Net result', signed(st.net)],
+    ['Rounds played', st.rounds], ['Decisions scored', st.decisions],
+    ['Accuracy', acc], ['Cost of mistakes', money(st.chipsLost) + ' chips'],
+  ].map(([k, v]) => `<div class="stat"><small>${k}</small><strong>${v}</strong></div>`).join('');
+  $('log').innerHTML = S.log.length ? S.log.map(l => `<li>${l}</li>`).join('')
+    : '<li class="sub">None yet.</li>';
+
+  const f = S.fb;
+  if (f) {
+    const rows = Object.entries(f.ev).sort((a, b) => b[1] - a[1]).map(([a, e]) =>
+      `<tr class="${a === f.best ? 'best' : ''}"><td>${LABEL[a]}</td><td>${evFmt(e)}</td>
+       <td>${a === f.best ? 'best' : ''}${a === f.chosen ? (a === f.best ? ' · ' : '') + 'your pick' : ''}</td></tr>`).join('');
+    $('coach').innerHTML = `<div class="sub">${f.spot}</div>
+      <div class="verdict ${f.ok ? 'ok' : 'no'}">${f.ok ? '✓ ' + LABEL[f.chosen] + ' was the best move.'
+        : '✗ ' + LABEL[f.best] + ' was better than ' + LABEL[f.chosen] + '.'}</div>
+      ${f.ok ? '' : `<div class="sub">That choice gives up ${f.loss.toFixed(3)} bets on average (${money(f.chips)} chips at this bet).</div>`}
+      <table class="ev">${rows}</table>
+      <div class="sub" style="margin-top:8px">Numbers are the average win or loss per chip of your original bet over the long run.${f.scored ? '' : ' Not scored: hints were on.'}</div>`;
+  }
+}
+
+function buildChart() {
+  const ups = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0], R = S.rules;
+  const row = (label, v) => `<tr><th class="row">${label}</th>` + ups.map(up => {
+    const a = solve({ vals: v, up, decks: R.decks, h17: R.h17, das: R.das, surrender: R.surrender,
+      afterSplit: false }).best;
+    const L = { hit: 'H', stand: 'S', double: 'D', split: 'P', surrender: 'R' }[a];
+    return `<td class="a${L}">${L}</td>`;
+  }).join('') + '</tr>';
+  const head = t => `<tr><th class="sec" colspan="11">${t}</th></tr><tr><th class="row">You / Dealer</th>` +
+    ups.map(u => `<th>${u === 0 ? 'A' : u + 1}</th>`).join('') + '</tr>';
+  let html = head('Hard totals');
+  for (let t = 17; t >= 8; t--) html += row('Hard ' + t, t >= 12 ? [9, t - 11] : [1, t - 3]);
+  html += head('Soft totals');
+  for (let k = 9; k >= 2; k--) html += row('A + ' + k, [0, k - 1]);
+  html += head('Pairs');
+  html += row('A, A', [0, 0]);
+  for (let k = 10; k >= 2; k--) html += row(`${k}, ${k}`, [k - 1, k - 1]);
+  $('chart').innerHTML = html;
+}
+
+/* ---------------- wiring ---------------- */
+function syncRules() {
+  $('rDecks').value = S.rules.decks; $('rH17').value = S.rules.h17 ? 1 : 0;
+  $('rDas').value = S.rules.das ? 1 : 0; $('rSur').value = S.rules.surrender ? 1 : 0;
+  $('rBj').value = S.rules.bj; $('hint').checked = S.hint;
+}
+document.querySelectorAll('.rules select').forEach(el => el.addEventListener('change', () => {
+  S.rules = { decks: +$('rDecks').value, h17: $('rH17').value === '1', das: $('rDas').value === '1',
+    surrender: $('rSur').value === '1', bj: +$('rBj').value };
+  newShoe(); S.msg = 'Rules changed: new shoe shuffled.'; buildChart(); save(); render();
+}));
+document.querySelectorAll('#actions button').forEach(b => b.addEventListener('click', () => act(b.dataset.a)));
+document.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => {
+  S.bet = +b.dataset.chip; $('bet').value = S.bet; save();
+}));
+$('deal').addEventListener('click', deal);
+$('hint').addEventListener('change', e => { S.hint = e.target.checked; save(); render(); });
+$('reset').addEventListener('click', () => {
+  if (S.phase !== 'bet') return;
+  S.bankroll = 1000; S.stats = fresh(); S.log = []; S.fb = null; S.hands = []; S.dealer = []; S.msg = '';
+  $('coach').innerHTML = '<div class="sub">Session reset. Play a hand to get feedback.</div>';
+  save(); render();
+});
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const typing = e.target.tagName === 'INPUT' && e.target.type === 'number';
+  if (e.key === 'Enter') { e.preventDefault(); deal(); return; }
+  if (typing) return;
+  const a = { h: 'hit', s: 'stand', d: 'double', p: 'split', r: 'surrender' }[e.key.toLowerCase()];
+  if (a) act(a);
+});
+
+load(); syncRules(); newShoe(); buildChart(); render();
+</script>
+</body>
+</html>
